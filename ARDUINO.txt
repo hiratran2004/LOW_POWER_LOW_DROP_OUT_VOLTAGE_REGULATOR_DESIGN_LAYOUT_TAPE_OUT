@@ -1,0 +1,44 @@
+#include <SPI.h>
+#include <Wire.h>
+#include <U8g2lib.h>
+#include <MFRC522.h>
+#include <WiFi.h>
+#include "Attendance.h"
+
+// Wi-Fi & Google-Sheet settings
+const char* ssid        = "Hieu 3_2.4G";
+const char* password    = "giadinh8";
+String      Web_App_URL = "https://script.google.com/macros/s/AKfycbxgyYxlv9wfxsFNjPYlkDsibE4xB_rm-y2al4gJGEj_4up7iZ4oZ-t5gs5HWclbARyjgw/exec";
+
+// Pin definitions
+#define SS_PIN        16
+#define RST_PIN       17
+#define BTN_IO        15
+#define LED_IO        4
+#define BTN_CREATE    26
+#define LED_CREATE    27
+#define BUZZER_PIN    5
+
+// Display & RFID objects
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+MFRC522                            rfid(SS_PIN, RST_PIN);
+
+// Create one Attendance instance, passing all hardware & config
+Attendance attendance(
+  ssid, password, Web_App_URL,
+  u8g2, rfid,
+  BTN_IO, LED_IO,
+  BTN_CREATE, LED_CREATE,
+  BUZZER_PIN
+);
+
+void setup() {
+  Serial.begin(115200);
+  // Initialize Wi-Fi, display intro, load sheet data, start RFID
+  attendance.begin();
+}
+
+void loop() {
+  // Poll buttons, cards, handle check-in/out or new-card modes
+  attendance.loop();
+}
