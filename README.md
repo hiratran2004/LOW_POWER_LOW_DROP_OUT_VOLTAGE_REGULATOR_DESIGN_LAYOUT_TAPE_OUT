@@ -1,7 +1,7 @@
 
 # Embedded-System-Assignment
 
-Here is a requirements document for a **Attendance check-in usingg ESP32 Controlled RFID**:
+Here is a requirements document for a **Attendance check-in using ESP32 Controlled RFID**:
 
 ---
 
