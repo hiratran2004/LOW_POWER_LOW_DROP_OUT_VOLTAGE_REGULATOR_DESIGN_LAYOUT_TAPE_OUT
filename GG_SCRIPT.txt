@@ -1,0 +1,77 @@
+/**
+ * Google Apps Script to handle ESP32 GET requests for:
+ *  • Reading the DANHSACH sheet (sts=read)
+ *  • Writing a UID for check-in/out (sts=writeuid)
+ *  • Logging a check-in/out event (sts=writelog)
+ *  • Adding a new card request (sts=newcard)
+ */
+
+function doGet(e) {
+  Logger.log(JSON.stringify(e));
+  if (!e.parameter || !e.parameter.sts) {
+    return ContentService.createTextOutput('No Parameters');
+  }
+
+  // CONFIGURATION
+  var SPREADSHEET_ID = '1il-GwrortzeSOLaenQ0iQEYvWbXf3fXyxqE2HBCdEXc';
+  var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+
+  // Pull out parameters
+  var sts    = stripQuotes(e.parameter.sts);
+  var uid    = e.parameter.uid ? stripQuotes(e.parameter.uid) : '';
+  var name   = e.parameter.name ? stripQuotes(e.parameter.name) : '';
+  var inout  = e.parameter.inout ? stripQuotes(e.parameter.inout) : '';
+
+  // Common timestamp fields
+  var now   = new Date();
+  var date  = Utilities.formatDate(now, 'Asia/Jakarta', 'dd/MM/yyyy');
+  var time  = Utilities.formatDate(now, 'Asia/Jakarta', 'HH:mm:ss');
+
+  switch (sts) {
+
+    case 'read':
+      // Return DANHSACH!A2:C11 as CSV
+      var listSheet = ss.getSheetByName('DANHSACH');
+      var dataRange = listSheet.getRange('A2:C11');
+      var data = dataRange.getDisplayValues();
+      return ContentService.createTextOutput(data);
+
+    case 'writeuid':
+      // F1 = most recent UID
+      var ds = ss.getSheetByName('DANHSACH');
+      ds.getRange('F1').setValue(uid);
+      return ContentService.createTextOutput('Success');
+
+    case 'writelog':
+      // Prepend a row to DIEMDANH with date,time,uid,name,inout
+      var logSheet = ss.getSheetByName('DIEMDANH');
+      logSheet.insertRowBefore(2);
+      logSheet.getRange(2,1,1,5)
+              .setValues([[ date, time, uid, name, inout ]]);
+      return ContentService.createTextOutput('Logged');
+
+    case 'newcard':
+      // If uid exists in DANHSACH column B, return ALL READY EXIST
+      // else append to THEMOI sheet
+      var dsheet = ss.getSheetByName('DANHSACH');
+      var allIds = dsheet.getRange(2,2, dsheet.getLastRow()-1, 1)
+                        .getValues()
+                        .map(function(r){return r[0];});
+      if (allIds.indexOf(uid) !== -1) {
+        var newSheet = ss.getSheetByName('THEMOI');
+        newSheet.appendRow([ date, time, "ALREADY EXIST" ]);
+        return ContentService.createTextOutput('ALREADY EXIST');
+      }
+      var newSheet = ss.getSheetByName('THEMOI');
+      newSheet.appendRow([ date, time, uid ]);
+      return ContentService.createTextOutput('New Card Added');
+
+    default:
+      return ContentService.createTextOutput('Unsupported sts');
+  }
+}
+
+/** Utility to strip leading/trailing quotes from a string */
+function stripQuotes(value) {
+  return value.replace(/^["']|['"]$/g, "");
+}
