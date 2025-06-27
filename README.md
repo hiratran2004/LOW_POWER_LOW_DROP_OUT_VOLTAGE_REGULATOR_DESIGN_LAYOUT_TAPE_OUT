@@ -4,6 +4,6 @@
 
 **Organization:** National Chung Cheng University
 
-![Logo](figure/ccu_logo.png)
+![Logo](figure/NCCU.jpg)
 
 **Date (last upadated):** Coming soon
