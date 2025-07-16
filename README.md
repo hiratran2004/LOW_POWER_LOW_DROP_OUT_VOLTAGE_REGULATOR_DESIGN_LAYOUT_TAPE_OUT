@@ -6,6 +6,6 @@
 
 ![Logo](figure/NCCU.jpg)
 
-**Technology/Process:** UMC 180nm
+**Technology/Process:** TSMC 180nm
 
 **Date (last upadated):** Coming soon
